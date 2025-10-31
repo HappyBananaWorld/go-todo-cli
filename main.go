@@ -12,7 +12,8 @@ import (
 
 var commands = map[string]func([]string){
 	"--help":showHelp,
-	"--store":store,
+	"--store":storeTodo,
+	"--get":getTodo,
 }
 
 var (
@@ -24,15 +25,8 @@ var (
 	})
 )
 
-func main() {
-	
+func main() {	
 	defer rdb.Close()
-
-	err:=rdb.Set(ctx,"name","sa3232jad11",0).Err()
-
-	if err != nil{
-		fmt.Println("Error On storing something in redis", err)
-	}
 
 	args := os.Args
 	command := args[1]
@@ -52,11 +46,21 @@ func set(key string, value string, ttl time.Duration) bool{
 	return true
 }
 
+func get(key string) (string,error){
+	val, err := rdb.Get(ctx,key).Result()
+
+	if err != nil{
+		return "",err
+	}
+
+	return val,nil
+}
+
 func showHelp(args []string){
     fmt.Println("  --version Show version")
 }
 
-func store(args []string){
+func storeTodo(args []string){
 	if len(args) > 2{
 		color.Red("only gives, key/value")
 	}
@@ -71,4 +75,18 @@ func store(args []string){
 	}
 	
 	color.Green("Stored successfully")
+}
+
+
+func getTodo(args[]string){
+	key := args[0]
+
+	val,err := get(key)
+
+	if err != nil{
+		color.Red("Something wen wrong :(")
+		return
+	}
+
+	color.Green(val)
 }
